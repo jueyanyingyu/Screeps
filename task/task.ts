@@ -11,6 +11,8 @@ class Task implements iTask{
     data: Object;
     nextTask: iTask;
 
+    
+
     constructor(taskType: string, creep: Creep, target: RoomObject, targetPos: RoomPosition, setting: Object, data: Object, nextTask: iTask) {
         this.taskType = taskType
         this.creep = creep

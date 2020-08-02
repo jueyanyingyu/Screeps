@@ -1,50 +1,31 @@
-import { iTask } from "./iTask";
+export { Task }
 
-export {Task}
+abstract class Task {
+    taskType: string
+    creep: Creep | PowerCreep
+    target: Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone
+    targetPos: RoomPosition
+    setting: Object
+    data: Object
 
-class Task implements iTask{
-    taskType: string;
-    creep: Creep;
-    target: RoomObject;
-    targetPos: RoomPosition;
-    setting: Object;
-    data: Object;
-    nextTask: iTask;
+    _isInvalid: boolean
+    _finished: boolean
 
-    
-
-    constructor(taskType: string, creep: Creep, target: RoomObject, targetPos: RoomPosition, setting: Object, data: Object, nextTask: iTask) {
+    constructor(taskType: string, creep: Creep | PowerCreep, target: Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone, targetPos: RoomPosition, setting: Object, data: Object) {
         this.taskType = taskType
         this.creep = creep
         this.target = target
         this.targetPos = targetPos
         this.setting = setting
         this.data = data
-        this.nextTask = nextTask
+
+        this._isInvalid = false
+        this._finished = false
     }
 
-    isValid(): boolean {
-        return false
-    }
-    isDone(): boolean {
-        return false
-    }
-    run(): void {
-        
-    }
-    finish(): iTask {
-        return this.nextTask
-    }
-    fork(newTask: iTask): iTask {
-        this.nextTask = this
-        return newTask
-    }
-    add(newTask: iTask): void {
-        let pTask:iTask = this
-        while (pTask.nextTask) {
-            pTask = pTask.nextTask
-        }
-        pTask.nextTask = newTask
-    }
+    abstract isValid(): boolean
+    abstract isDone(): boolean
+    abstract run(): void
+    abstract finish(): void
 
 }

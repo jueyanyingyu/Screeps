@@ -1,20 +1,42 @@
 import { Task } from "../Task";
-import { PathController } from "../../util/PathController";
 import { pathController } from "../../init";
-import { openStdin } from "process";
 
 
-export class MoveTask extends Task {
+export class GotoTask extends Task {
+
+    static marshal(stask: string): GotoTask {
+        let list = stask.split(';')
+        let taskType = list[0]
+        let creep = Game.getObjectById(list[1])
+        let target = Game.getObjectById(list[2])
+        let xyRoomName = list[3].split(':')
+        let targetPos = new RoomPosition(Number(xyRoomName[0]), Number(xyRoomName[1]), xyRoomName[2])
+        let setting = JSON.parse(list[4])
+        let data = JSON.parse(list[5])
+        return new GotoTask(taskType, <Creep>creep,
+            <Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone>target,
+            targetPos, setting, data)
+    }
+
+    static unmarshal(task: GotoTask): string {
+        return task.taskType + ';'
+            + task.creep.id + ';'
+            + task.target.id + ';'
+            + task.targetPos.x + ':' + task.targetPos.y + ':' + task.targetPos.roomName + ';'
+            + JSON.stringify(task.setting) + ';'
+            + JSON.stringify(task.data)
+    }
 
     isValid(): boolean {
-        if (!typeof this.creep) {
+        if (!this.creep || !this.creep.my) {
+            this._isInvalid = true
             return false
         }
         if (!this.target && !this.targetPos) {
+            this._isInvalid = true
             return false
         }
-        return this.creep.getActiveBodyparts(MOVE) > 0
-
+        return true
     }
     isDone(): boolean {
         let range: number = 0
@@ -55,5 +77,9 @@ export class MoveTask extends Task {
             let newPath = pathController.getPath(this.setting['origin'], goal, getpathOpts)
             this.creep.moveByPath(newPath)
         }
+    }
+
+    finish(): void {
+        this._finished = true
     }
 }

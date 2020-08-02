@@ -1,16 +1,13 @@
 import { PathController } from "./util/PathController"
-import { LRU } from "./module/LRU"
-
+import { TaskController } from "./util/TaskController"
 export { init }
 
 export { pathController }
+export { taskController }
 var pathController: PathController
+var taskController: TaskController
 
 function init(): void {
-    pathController = new PathController()
-    if (Memory['PathControllerCache']) {
-        pathController.cache = LRU.marshal(Memory['PathControllerCache'])
-    } else {
-        pathController.cache = new LRU(1)
-    }
+    pathController = PathController.marshal(Memory['PathControllerMem'])
+    taskController = TaskController.marshal(Memory['TaskControllerMem'])
 }

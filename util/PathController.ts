@@ -1,4 +1,6 @@
-import { LRU } from "../module/LRU"
+import { LRUCache } from "../module/LRUCache"
+
+
 
 class GetPathOpts {
     range: number
@@ -7,10 +9,29 @@ class GetPathOpts {
     flee: boolean
 }
 export class PathController {
-    cache: LRU
+    private cache: LRUCache
+
+    static marshal(obj: Object): PathController {
+        let pathController = new PathController()
+        if (obj) {
+            pathController.cache = LRUCache.marshal(obj)
+        } else {
+            pathController.cache = new LRUCache(200)
+        }
+        return pathController
+
+    }
+    static unmarshal(pathController: PathController): Object {
+        return LRUCache.unmarshal(pathController.cache)
+    }
 
     getPath(origin: RoomPosition, goal: RoomPosition, opts?: GetPathOpts): RoomPosition[] {
-        let pathKey: string = origin.x + ':' + origin.y + ':' + origin.roomName + ';' + goal.x + ':' + goal.y + ':' + goal.roomName
+        let pathKey: string = Game.time / 1500 + origin.x + ':' + origin.y + ':' + origin.roomName + ';' + goal.x + ':' + goal.y + ':' + goal.roomName
+        if (opts) {
+            for (let i in opts) {
+                pathKey = pathKey + ':' + opts[i]
+            }
+        }
         let path: RoomPosition[]
         if (this.cache.get(pathKey)) {
             path = this.deserializePath(this.cache.get(pathKey))

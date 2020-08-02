@@ -10,7 +10,7 @@ function run(): void {
         }
         if (task.isValid()) {
             task.run()
-        }
+        }//todo done延迟
         if (task.isDone()) {
             task.finish()
         }

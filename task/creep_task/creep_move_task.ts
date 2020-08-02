@@ -19,12 +19,25 @@ export class GotoTask extends Task {
     }
 
     static unmarshal(task: GotoTask): string {
-        return task.taskType + ';'
-            + task.creep.id + ';'
-            + task.target.id + ';'
-            + task.targetPos.x + ':' + task.targetPos.y + ':' + task.targetPos.roomName + ';'
-            + JSON.stringify(task.setting) + ';'
-            + JSON.stringify(task.data)
+        let res = task.taskType + ';'
+        res = res + task.creep.id + ';'
+        if (task.target) {
+            res = res + task.target.id + ';'
+        } else {
+            res = res + ';'
+        }
+        if (task.targetPos) {
+            res = res + task.targetPos.x + ':' + task.targetPos.y + ':' + task.targetPos.roomName + ';'
+        } else {
+            res = res + ';'
+        }
+        res = res + JSON.stringify(task.setting) + ';'
+        res = res + JSON.stringify(task.data)
+        return res
+    }
+    constructor(taskType: string, creep: Creep | PowerCreep, target: Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone, targetPos: RoomPosition, setting: Object, data: Object) {
+        super(taskType, creep, target, targetPos, setting, data);
+        this.setting['range'] = 0
     }
 
     isValid(): boolean {
@@ -56,7 +69,7 @@ export class GotoTask extends Task {
     }
     run(): void {
         if (!this.setting['origin']) {
-            this.setting['orngin'] = this.creep.pos
+            this.setting['origin'] = this.creep.pos
         }
         let goal: RoomPosition
         if (this.target) {

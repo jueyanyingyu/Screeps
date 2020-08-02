@@ -26,7 +26,7 @@ export class PathController {
     }
 
     getPath(origin: RoomPosition, goal: RoomPosition, opts?: GetPathOpts): RoomPosition[] {
-        let pathKey: string = Game.time / 1500 + origin.x + ':' + origin.y + ':' + origin.roomName + ';' + goal.x + ':' + goal.y + ':' + goal.roomName
+        let pathKey: string = Math.floor(Game.time / 1500) + origin.x + ':' + origin.y + ':' + origin.roomName + ';' + goal.x + ':' + goal.y + ':' + goal.roomName
         if (opts) {
             for (let i in opts) {
                 pathKey = pathKey + ':' + opts[i]

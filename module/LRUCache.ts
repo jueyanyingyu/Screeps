@@ -23,7 +23,7 @@ class LRUCache {
         let sLRUCache = {
             capacity: LRUCache.capacity,
             size: LRUCache.size,
-            MapNodeList: []
+            mapNodeList: []
         }
         let MapNode = LRUCache._start._next
         while (MapNode !== LRUCache._end) {
@@ -70,7 +70,9 @@ class LRUCache {
     set(key: string, data: string): void {
         if (this._map.has(key)) {
             let meta = this._map.get(key)
-            meta.data = data
+            meta.data = data 
+            this.removeFormList(meta)
+            this.addFirsrtInList(meta)
         } else {
             let meta = new MapNode()
             meta.key = key

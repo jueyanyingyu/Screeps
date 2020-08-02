@@ -1,3 +1,4 @@
+export {MemQueue}
 class MemQueueNode {
     _next: MemQueueNode
     _last: MemQueueNode
@@ -7,8 +8,7 @@ class MemQueueNode {
 class MemQueue {
     static marshal(obj: Object): MemQueue {
         let res = new MemQueue()
-        res.size = obj['size']
-        for (let i = res.size - 1; i >= 0; i--) {
+        for (let i = obj['size'] - 1; i >= 0; i--) {
             res.addFirst(obj['memQueueNodeList'][i])
         }
         return res

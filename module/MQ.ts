@@ -1,6 +1,6 @@
 import { MemQueue } from "./QUEUE";
 
-class MQ {
+export class MQ {
     messageQueueMap: Map<string, MemQueue>
     backendMap: Map<string, string>
     counter: number

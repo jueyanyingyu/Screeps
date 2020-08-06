@@ -50,7 +50,7 @@ class TaskController {
     }
 
     private static parseTask(stask: string): Task {
-        switch (stask.split(';', 1)[0]) {
+        switch (JSON.parse(stask)['taskType']) {
             case 'goto': return GotoTask.marshal(stask)
         }
         return null
@@ -58,7 +58,8 @@ class TaskController {
 
     private static stringifyTask(task: Task): string {
         switch (task.taskType) {
-            case 'goto': return GotoTask.unmarshal(task)
+            case 'goto': return GotoTask.unmarshal(task) 
+            break
         }
         return undefined
     }

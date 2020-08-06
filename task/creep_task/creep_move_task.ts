@@ -4,40 +4,18 @@ import { pathController } from "../../init";
 
 export class GotoTask extends Task {
 
-    static marshal(stask: string): GotoTask {
-        let list = stask.split(';')
-        let taskType = list[0]
-        let creep = Game.getObjectById(list[1])
-        let target = Game.getObjectById(list[2])
-        let xyRoomName = list[3].split(':')
-        let targetPos = new RoomPosition(Number(xyRoomName[0]), Number(xyRoomName[1]), xyRoomName[2])
-        let setting = JSON.parse(list[4])
-        let data = JSON.parse(list[5])
-        return new GotoTask(taskType, <Creep>creep,
-            <Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone>target,
-            targetPos, setting, data)
-    }
-
-    static unmarshal(task: GotoTask): string {
-        let res = task.taskType + ';'
-        res = res + task.creep.id + ';'
-        if (task.target) {
-            res = res + task.target.id + ';'
-        } else {
-            res = res + ';'
-        }
-        if (task.targetPos) {
-            res = res + task.targetPos.x + ':' + task.targetPos.y + ':' + task.targetPos.roomName + ';'
-        } else {
-            res = res + ';'
-        }
-        res = res + JSON.stringify(task.setting) + ';'
-        res = res + JSON.stringify(task.data)
-        return res
-    }
+    
     constructor(taskType: string, creep: Creep | PowerCreep, target: Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone, targetPos: RoomPosition, setting: Object, data: Object) {
         super(taskType, creep, target, targetPos, setting, data);
         this.setting['range'] = 0
+    }
+
+    static marshal(stask: string): GotoTask {
+        return <GotoTask>Task.marshal(stask)
+    }
+
+    static unmarshal(gotoTask:GotoTask):string {
+        return Task.unmarshal(<Task>gotoTask)
     }
 
     isValid(): boolean {

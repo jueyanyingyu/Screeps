@@ -23,7 +23,7 @@ class Task {
         this._finished = false
     }
 
-    private static marshal(stask: string): Task {
+    protected static marshal(stask: string): Task {
         let taskTotal = <string>JSON.parse(stask)
         let taskType = <string>taskTotal['taskType']
         let creep = <Creep | PowerCreep>Game.getObjectById(taskTotal['creep'])
@@ -35,7 +35,7 @@ class Task {
         return new Task(taskType, creep, target, targetPos, setting, data)
     }
 
-    private static unmarshal(task: Task): string {
+    protected static unmarshal(task: Task): string {
         let taskTotal = {
             taskType: task.taskType,
             creep: task.creep.id,

@@ -1,9 +1,9 @@
 import { MemQueue } from "./QUEUE";
 
 export class MQ {
-    messageQueueMap: Map<string, MemQueue>
-    backendMap: Map<string, string>
-    counter: number
+    private messageQueueMap: Map<string, MemQueue>
+    private backendMap: Map<string, string>
+    private counter: number
 
     static marshal(obj: Object): MQ {
         let mq = new MQ()
@@ -54,7 +54,11 @@ export class MQ {
             let queue = new MemQueue()
             this.messageQueueMap.set(consumerName, queue)
         }
-        queue.addLast(producerName + ';' + id + ';' + body)
+        queue.addLast(JSON.stringify({
+            producerName:producerName,
+            id:id,
+            body:body
+        }))
         return id
     }
     //返回id
@@ -68,7 +72,7 @@ export class MQ {
         queue.addFirst(producerName + ';' + id + ';' + body)
         return id
     }
-    //返回producerName;id;body,消费
+    //返回{producerName,id,body},消费
     getRequest(consumerName: string): string {
         let queue = this.messageQueueMap.get(consumerName)
         if (!queue) return undefined

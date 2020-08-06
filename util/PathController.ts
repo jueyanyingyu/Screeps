@@ -26,7 +26,7 @@ export class PathController {
     }
 
     getPath(origin: RoomPosition, goal: RoomPosition, opts?: GetPathOpts): RoomPosition[] {
-        let pathKey: string = Math.floor(Game.time / 1500) + origin.x + ':' + origin.y + ':' + origin.roomName + ';' + goal.x + ':' + goal.y + ':' + goal.roomName
+        let pathKey: string = Math.floor(Game.time / 1500) + ':' + origin.x + ':' + origin.y + ':' + origin.roomName + ';' + goal.x + ':' + goal.y + ':' + goal.roomName
         if (opts) {
             for (let i in opts) {
                 pathKey = pathKey + ':' + opts[i]
@@ -88,19 +88,21 @@ export class PathController {
     }
 
     serializePath(path: RoomPosition[]): string {
-        let res = ''
+        let res = []
         for (let p of path) {
-            res = res + p.x + ':' + p.y + ':' + p.roomName + ';'
+            res.push({
+                x: p.x,
+                y: p.y,
+                roomName: p.roomName
+            })
         }
-        return res
+        return JSON.stringify(res)
     }
     deserializePath(pathString: string): RoomPosition[] {
         let path: RoomPosition[] = []
-        let posStr = pathString.split(';')
-        for (let p of posStr) {
-            if (p === '') break
-            let list = p.split(':')
-            path.push(new RoomPosition(Number(list[0]), Number(list[1]), list[2]))
+        let list = JSON.parse(pathString)
+        for (let p of list) {
+            path.push(new RoomPosition(p['x'], p['y'], p['roomName']))
         }
         return path
     }

@@ -71,8 +71,8 @@ export class SpawnCluster extends Cluster {
             fillerRequestId1: spawnCluster.fillerRequestId1,
             filler2: spawnCluster.filler2.id,
             fillerRequestId2: spawnCluster.fillerRequestId2,
-            fillerPosPath1:spawnCluster.fillerPosPath1.map((p)=>JSON.stringify(p)),
-            fillerPosPath2:spawnCluster.fillerPosPath2.map((p)=>JSON.stringify(p))
+            fillerPosPath1:_.map(spawnCluster.fillerPosPath1,(p)=>JSON.stringify(p)),
+            fillerPosPath2:_.map(spawnCluster.fillerPosPath2,(p)=>JSON.stringify(p))
         }
     }
     //返回序列化的请求

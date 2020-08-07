@@ -1,7 +1,3 @@
-interface RoomPosition {
-    getByDir(direction: number): RoomPosition;
-    getEnergyStructureNearBy(): Structure[];
-}
 RoomPosition.prototype.getByDir = function (direction: number): RoomPosition {
     let x, y: number
     switch (direction) {

@@ -5,9 +5,10 @@ import { pathController } from "../../init";
 export class GotoTask extends Task {
 
     
-    constructor(taskType: string, creep: Creep | PowerCreep, target: Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone, targetPos: RoomPosition, setting: Object, data: Object) {
-        super(taskType, creep, target, targetPos, setting, data);
+    constructor( creep: Creep | PowerCreep, target: Creep | Deposit | Mineral | Nuke | PowerCreep | Resource | Ruin | Source | Structure | Tombstone, targetPos: RoomPosition, setting: Object, data: Object) {
+        super('goto', creep, target, targetPos, setting, data);
         this.setting['range'] = 0
+        this.setting['ignoreCreeps'] = true
     }
 
     static marshal(stask: string): GotoTask {

@@ -1,4 +1,4 @@
-import { LRUCache } from "../module/LRUCache"
+import { LRUCacheObject } from "../module/LRUCacheObject"
 
 
 
@@ -9,20 +9,14 @@ class GetPathOpts {
     flee: boolean
 }
 export class PathController {
-    private cache: LRUCache
+    private cache: LRUCacheObject
 
-    static marshal(obj: Object): PathController {
-        let pathController = new PathController()
-        if (obj) {
-            pathController.cache = LRUCache.marshal(obj)
-        } else {
-            pathController.cache = new LRUCache(200)
+    constructor() {
+        if (global['pathCache']) this.cache = global['pathCache']
+        else {
+            this.cache = new LRUCacheObject(200)
+            global['pathCache'] = this.cache
         }
-        return pathController
-
-    }
-    static unmarshal(pathController: PathController): Object {
-        return LRUCache.unmarshal(pathController.cache)
     }
 
     getPath(origin: RoomPosition, goal: RoomPosition, opts?: GetPathOpts): RoomPosition[] {
@@ -32,10 +26,7 @@ export class PathController {
                 pathKey = pathKey + ':' + opts[i]
             }
         }
-        let path: RoomPosition[]
-        if (this.cache.get(pathKey)) {
-            path = this.deserializePath(this.cache.get(pathKey))
-        }
+        let path = this.cache.get(pathKey)
         if (!path) {
             let pathFinderOpts: PathFinderOpts = {
                 flee: opts.flee,
@@ -81,29 +72,25 @@ export class PathController {
                 }
             }
             let res = PathFinder.search(origin, { pos: goal, range: opts.range }, pathFinderOpts)
-            this.cache.set(pathKey, this.serializePath(res.path))
+            this.cache.set(pathKey, res.path)
             return res.path
         }
-        return path
+        return <RoomPosition[]>path
     }
-
-    serializePath(path: RoomPosition[]): string {
-        let res = []
-        for (let p of path) {
-            res.push({
-                x: p.x,
-                y: p.y,
-                roomName: p.roomName
-            })
+    getPathByDirectionList(origin:RoomPosition,directionList:number[]):RoomPosition[] {
+        let pathKey = origin.x + ':' + origin.y + ':' + origin.roomName + ';' + directionList.join()
+        let path = this.cache.get(pathKey)
+        if (!path) {
+            let newPath:RoomPosition[]
+            let newPos = origin
+            newPath.push(origin)
+            for (let dir of directionList) {
+                newPos = newPos.getByDir(dir)
+                newPath.push(newPos)
+            }
+            path = newPath
+            this.cache.set(pathKey,path)
         }
-        return JSON.stringify(res)
-    }
-    deserializePath(pathString: string): RoomPosition[] {
-        let path: RoomPosition[] = []
-        let list = JSON.parse(pathString)
-        for (let p of list) {
-            path.push(new RoomPosition(p['x'], p['y'], p['roomName']))
-        }
-        return path
+        return <RoomPosition[]>path
     }
 }

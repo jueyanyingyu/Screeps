@@ -1,7 +1,8 @@
-import { mq } from "../init"
+import { mq, pathController, taskController } from "../init"
 import { Colony } from "../colony/Colony"
 import { Cluster } from "./Cluster"
 import { ConstructorCluster } from "./ConstructorCluster"
+import { GotoTask } from "../task/creep_task/creep_move_task"
 
 export class SpawnCluster extends Cluster {
     spawn1: StructureSpawn
@@ -16,11 +17,11 @@ export class SpawnCluster extends Cluster {
     filler2: Creep
     fillerRequestId2: string
 
-    fillerPosPath1:RoomPosition[]
-    fillerPosPath2:RoomPosition[]
+    fillerPosPath1: RoomPosition[]
+    fillerPosPath2: RoomPosition[]
 
-    static fillingPath1 = [3, 2, 1, 1, 0, 7, 7, 6, 5, 5, 7, 7, 6, 5, 5, 4, 3, 3, 2, 1, 2]
-    static fillingPath2 = [5, 6, 7, 7, 0, 1, 1, 2, 3, 3, 1, 1, 2, 3, 3, 4, 5, 5, 6, 7, 6]
+    static fillingPath1 = [4, 3, 2, 2, 1, 8, 8, 7, 6, 6, 8, 8, 7, 6, 6, 5, 4, 4, 3, 2, 3]
+    static fillingPath2 = [6, 7, 8, 8, 1, 2, 2, 3, 4, 4, 2, 2, 3, 4, 5, 5, 6, 6, 7, 8, 7]
 
     static creepTypes = {
         filler: {
@@ -46,14 +47,8 @@ export class SpawnCluster extends Cluster {
         spawnCluster.fillerRequestId1 = obj['fillerRequestId1']
         spawnCluster.filler2 = Game.getObjectById(obj['filler2'])
         spawnCluster.fillerRequestId2 = obj['fillerRequestId2']
-        for (let spos of obj['fillerPosPath1']) {
-            let opos = JSON.parse(spos)
-            spawnCluster.fillerPosPath1.push(new　RoomPosition(opos['x'],opos['y'],opos['roomName']))
-        }
-        for (let spos of obj['fillerPosPath2']) {
-            let opos = JSON.parse(spos)
-            spawnCluster.fillerPosPath2.push(new　RoomPosition(opos['x'],opos['y'],opos['roomName']))
-        }
+        spawnCluster.fillerPosPath1 = SpawnCluster.getPath(colony.anchor, SpawnCluster.fillingPath1)
+        spawnCluster.fillerPosPath2 = SpawnCluster.getPath(colony.anchor, SpawnCluster.fillingPath2)
         return spawnCluster
     }
 
@@ -70,10 +65,11 @@ export class SpawnCluster extends Cluster {
             filler1: spawnCluster.filler1.id,
             fillerRequestId1: spawnCluster.fillerRequestId1,
             filler2: spawnCluster.filler2.id,
-            fillerRequestId2: spawnCluster.fillerRequestId2,
-            fillerPosPath1:spawnCluster.fillerPosPath1.map((p)=>JSON.stringify(p)),
-            fillerPosPath2:spawnCluster.fillerPosPath2.map((p)=>JSON.stringify(p))
+            fillerRequestId2: spawnCluster.fillerRequestId2
         }
+    }
+    static getPath(anchor: RoomPosition, fillerPath: number[]): RoomPosition[] {
+        return pathController.getPathByDirectionList(anchor, fillerPath)
     }
     //返回序列化的请求
     static spawnCreep(creepType: string): string {
@@ -85,26 +81,30 @@ export class SpawnCluster extends Cluster {
     }
 
     run(): void {
-        if (this.filler1) this._fillerRun(this.filler1, SpawnCluster.fillingPath1)
+        if (this.filler1) this._fillerRun(this.filler1, new RoomPosition(this.colony.anchor.x + 1, this.colony.anchor.y + 1, this.colony.anchor.roomName), SpawnCluster.fillingPath1)
         else this._getFillerById(1, this.fillerRequestId1)
-        if (this.filler2) this._fillerRun(this.filler2, SpawnCluster.fillingPath2)
+        if (this.filler2) this._fillerRun(this.filler2, new RoomPosition(this.colony.anchor.x - 1, this.colony.anchor.y + 1, this.colony.anchor.roomName), SpawnCluster.fillingPath2)
         else this._getFillerById(2, this.fillerRequestId2)
 
         if (this.spawn3) this._spawnRun(this.spawn3)
-        else this._getSpawnById(3,this.spawnRequestId3)
+        else this._getSpawnById(3, this.spawnRequestId3)
         if (this.spawn2) this._spawnRun(this.spawn2)
-        else this._getSpawnById(2,this.spawnRequestId2)
+        else this._getSpawnById(2, this.spawnRequestId2)
         if (this.spawn1) this._spawnRun(this.spawn1)
-        else this._getSpawnById(1,this.spawnRequestId1)
+        else this._getSpawnById(1, this.spawnRequestId1)
     }
-    _fillerRun(filler: Creep, fillerpath: number[]) {
+    _fillerRun(filler: Creep, stablePos: RoomPosition, fillerpath: number[]) {
         if (filler.room.energyAvailable < filler.room.energyCapacityAvailable) {
-            if (!this.fillerPosPath1 || this.fillerPosPath1.length == 0) this.fillerPosPath1 = this._getPath(this.colony.anchor,SpawnCluster.fillingPath1)
-            
+            let structureList: Structure[] = filler.pos.getEnergyStructureNearBy()
+            let toTransfer = null
+        } else if (filler.pos.isEqualTo(stablePos)) {
+            if (filler.idle()) {
+                let task = new GotoTask(filler,null,stablePos,null,null)
+                taskController.forkTask(filler.id,task)
+            }
+            filler.run()
         } else if (filler.ticksToLive < 1450) {
             if (this.spawn1) this.spawn1.renewCreep(filler)
-        } else {
-
         }
     }
     _spawnRun(spawn: StructureSpawn) {
@@ -141,35 +141,33 @@ export class SpawnCluster extends Cluster {
         if (!id) {
             let newSpawnPos: RoomPosition
             switch (n) {
-                case 1: newSpawnPos = new RoomPosition(this.colony.anchor.x, this.colony.anchor.y + 2, this.colony.anchor.roomName) 
-                break
-                case 2: newSpawnPos = new RoomPosition(this.colony.anchor.x + 2, this.colony.anchor.y + 3, this.colony.anchor.roomName) 
-                break
-                case 3: newSpawnPos = new RoomPosition(this.colony.anchor.x - 2, this.colony.anchor.y + 3, this.colony.anchor.roomName) 
-                break
+                case 1: newSpawnPos = new RoomPosition(this.colony.anchor.x, this.colony.anchor.y + 2, this.colony.anchor.roomName)
+                    break
+                case 2: newSpawnPos = new RoomPosition(this.colony.anchor.x + 2, this.colony.anchor.y + 3, this.colony.anchor.roomName)
+                    break
+                case 3: newSpawnPos = new RoomPosition(this.colony.anchor.x - 2, this.colony.anchor.y + 3, this.colony.anchor.roomName)
+                    break
             }
-            let newId = mq.sendRequestUrgently(this.colony.constructorCluster.name, this.name, ConstructorCluster.construct(newSpawnPos,STRUCTURE_SPAWN))
+            let newId = mq.sendRequestUrgently(this.colony.constructorCluster.name, this.name, ConstructorCluster.construct(newSpawnPos, STRUCTURE_SPAWN))
             switch (n) {
-                case 1: this.spawnRequestId1 = newId 
-                break
-                case 2: this.spawnRequestId2 = newId 
-                break
-                case 3: this.spawnRequestId3 = newId 
-                break
+                case 1: this.spawnRequestId1 = newId
+                    break
+                case 2: this.spawnRequestId2 = newId
+                    break
+                case 3: this.spawnRequestId3 = newId
+                    break
             }
             return null
         }
         switch (n) {
-            case 1: this.spawnRequestId1 = undefined 
-            break
-            case 2: this.spawnRequestId2 = undefined 
-            break
-            case 3: this.spawnRequestId3 = undefined 
-            break
+            case 1: this.spawnRequestId1 = undefined
+                break
+            case 2: this.spawnRequestId2 = undefined
+                break
+            case 3: this.spawnRequestId3 = undefined
+                break
         }
         return
     }
-    _getPath(anchor:RoomPosition,fillerPath:number[]):RoomPosition[]{
-        
-    }
+
 }

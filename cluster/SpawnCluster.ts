@@ -34,12 +34,7 @@ export class SpawnCluster extends Cluster {
 
     static marshal(colony: Colony, obj: Object): SpawnCluster {
         let spawnCluster = new SpawnCluster()
-        if (!obj) {
-            spawnCluster.colony = colony
-            spawnCluster.name = colony.name + ':spawnCluster'
-            return spawnCluster
-        }
-
+        
         spawnCluster.colony = colony
         spawnCluster.name = obj['name']
 

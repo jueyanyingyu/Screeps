@@ -6,13 +6,8 @@ export class ConstructorCluster extends Cluster{
 
 
     static marshal(colony: Colony, obj: Object): ConstructorCluster {
-        if (!obj) return undefined
         let constructorCluster = new ConstructorCluster()
-        if (!obj) {
-            constructorCluster.colony = colony
-            constructorCluster.name = colony.name + ":constructorCluster"
-            return constructorCluster
-        }
+        
         constructorCluster.colony = colony
         constructorCluster.colony = obj['name']
 

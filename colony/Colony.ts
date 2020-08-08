@@ -11,10 +11,6 @@ export class Colony {
     constructorCluster: ConstructorCluster
 
     static marshal(shard: Shard, obj: Object): Colony {
-        if (!obj) {
-            let colony = new Colony()
-            colony.name = shard.name + ':'
-        }
         let colony = new Colony()
         colony.name = obj['name']
         let list = obj['anchor'].split(':')

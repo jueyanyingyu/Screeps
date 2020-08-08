@@ -1,12 +1,14 @@
-import { pathController, taskController, mq } from "./init"
-import { PathController } from "./util/PathController"
+import { pathController, taskController, mq, shard } from "./init"
 import { TaskController } from "./util/TaskController"
 import { MQ } from "./module/MQ"
+import { Shard } from "./shard/Shard"
 
 export { finish }
 
 function finish(): void {
     Memory['MQMem'] = MQ.unmarshal(mq)
-    Memory['PathControllerMem'] = PathController.unmarshal(pathController)
-    Memory['TaskControllerMem'] = TaskController.unmarshal(taskController)
+    global['pathCache'] = pathController
+    Memory['taskControllerMem'] = TaskController.unmarshal(taskController)
+
+    Memory['shardMem'] = Shard.unmarshal(shard)
 }

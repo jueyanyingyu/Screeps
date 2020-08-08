@@ -58,8 +58,8 @@ class TaskController {
 
     private static stringifyTask(task: Task): string {
         switch (task.taskType) {
-            case 'goto': return GotoTask.unmarshal(task) 
-            break
+            case 'goto': return GotoTask.unmarshal(task)
+                break
         }
         return undefined
     }
@@ -98,5 +98,11 @@ class TaskController {
             queue.addFirst(TaskController.stringifyTask(nowTask))
         }
         this.taskMap.set(creepId, task)
+    }
+
+    idle(creepId: string): boolean {
+        if (!this.getTask(creepId))
+            return true
+        return false
     }
 }

@@ -1,6 +1,5 @@
 import { PathController } from "./util/PathController"
 import { TaskController } from "./util/TaskController"
-import { GotoTask } from "./task/creep_task/creep_move_task"
 import { MQ } from "./module/MQ"
 import { Colony } from "./colony/Colony"
 
@@ -14,7 +13,7 @@ var taskController: TaskController
 
 function init(): void {
     mq = MQ.marshal(Memory['MQMem'])
-    pathController = PathController.marshal(Memory['PathControllerMem'])
+    pathController = global['pathCache'] ? global['pathCache'] : new PathController()
     taskController = TaskController.marshal(Memory['TaskControllerMem'])
     
     

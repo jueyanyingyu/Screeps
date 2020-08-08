@@ -12,11 +12,7 @@ export class PathController {
     private cache: LRUCacheObject
 
     constructor() {
-        if (global['pathCache']) this.cache = global['pathCache']
-        else {
-            this.cache = new LRUCacheObject(200)
-            global['pathCache'] = this.cache
-        }
+        this.cache = new LRUCacheObject(200)
     }
 
     getPath(origin: RoomPosition, goal: RoomPosition, opts?: GetPathOpts): RoomPosition[] {

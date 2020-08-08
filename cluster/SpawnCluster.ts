@@ -27,14 +27,20 @@ export class SpawnCluster extends Cluster {
         filler: {
             metaBody: [CARRY, CARRY, MOVE],
             ll: 1,
-            ul: 16
+            ul: 16,
+            metaCost:150
         }
     }
 
     static marshal(colony: Colony, obj: Object): SpawnCluster {
         let spawnCluster = new SpawnCluster()
-        spawnCluster.colony = colony
+        if (!obj) {
+            spawnCluster.colony = colony
+            spawnCluster.name = colony.name + ':spawnCluster'
+            return spawnCluster
+        }
 
+        spawnCluster.colony = colony
         spawnCluster.name = obj['name']
 
         spawnCluster.spawn1 = Game.getObjectById(obj['spawn1'])
@@ -81,9 +87,9 @@ export class SpawnCluster extends Cluster {
     }
 
     run(): void {
-        if (this.filler1) this._fillerRun(this.filler1, new RoomPosition(this.colony.anchor.x + 1, this.colony.anchor.y + 1, this.colony.anchor.roomName), SpawnCluster.fillingPath1)
+        if (this.filler1) this._fillerRun(this.filler1, new RoomPosition(this.colony.anchor.x + 1, this.colony.anchor.y + 1, this.colony.anchor.roomName), this.fillerPosPath1)
         else this._getFillerById(1, this.fillerRequestId1)
-        if (this.filler2) this._fillerRun(this.filler2, new RoomPosition(this.colony.anchor.x - 1, this.colony.anchor.y + 1, this.colony.anchor.roomName), SpawnCluster.fillingPath2)
+        if (this.filler2) this._fillerRun(this.filler2, new RoomPosition(this.colony.anchor.x - 1, this.colony.anchor.y + 1, this.colony.anchor.roomName), this.fillerPosPath2)
         else this._getFillerById(2, this.fillerRequestId2)
 
         if (this.spawn3) this._spawnRun(this.spawn3)
@@ -93,16 +99,30 @@ export class SpawnCluster extends Cluster {
         if (this.spawn1) this._spawnRun(this.spawn1)
         else this._getSpawnById(1, this.spawnRequestId1)
     }
-    _fillerRun(filler: Creep, stablePos: RoomPosition, fillerpath: number[]) {
+    _fillerRun(filler: Creep, stablePos: RoomPosition, fillerPospath: RoomPosition[]) {
         if (filler.room.energyAvailable < filler.room.energyCapacityAvailable) {
             let structureList: Structure[] = filler.pos.getEnergyStructureNearBy()
-            let toTransfer = null
+            let toTransfer: Structure
+            _.some(structureList, (s) => {
+                toTransfer = s;
+                return (s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_EXTENSION) && s['store'].getFreeCapacity(RESOURCE_ENERGY) > 0
+            })
+            let toWithdraw: Structure
+            _.some(structureList, (s) => {
+                toWithdraw = s;
+                return (s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER) && s['store'].getUsedCapacity(RESOURCE_ENERGY) > 0
+            })
+            if (toTransfer && filler.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+                filler.transfer(toTransfer, RESOURCE_ENERGY)
+            } else if (toWithdraw) {
+                filler.withdraw(toWithdraw, RESOURCE_ENERGY)
+            } else filler.moveByPath(fillerPospath)
         } else if (filler.pos.isEqualTo(stablePos)) {
-            if (filler.idle()) {
-                let task = new GotoTask(filler,null,stablePos,null,null)
-                taskController.forkTask(filler.id,task)
+            if (taskController.idle(filler.id)) {
+                let task = new GotoTask(filler, null, stablePos, null, null)
+                taskController.forkTask(filler.id, task)
             }
-            filler.run()
+            taskController.getTask(filler.id).run()
         } else if (filler.ticksToLive < 1450) {
             if (this.spawn1) this.spawn1.renewCreep(filler)
         }
@@ -113,8 +133,11 @@ export class SpawnCluster extends Cluster {
             let creepType = request['body']
             let id = request['id']
             let body = []
+            let cost = 0
             for (let i = SpawnCluster.creepTypes[creepType]['ll']; i <= SpawnCluster.creepTypes[creepType]['ul']; i++) {
                 body.concat(SpawnCluster.creepTypes[creepType]['metaBody'])
+                cost = cost + SpawnCluster.creepTypes[creepType]['metaCost']
+                if (cost + SpawnCluster.creepTypes[creepType]['metaCost'] > spawn.room.energyCapacityAvailable) break
             }
             let creepName = creepType + ':' + spawn.name + ':' + Game.time
             let result = spawn.spawnCreep(body, creepName)
@@ -167,7 +190,7 @@ export class SpawnCluster extends Cluster {
             case 3: this.spawnRequestId3 = undefined
                 break
         }
-        return
+        return <StructureSpawn>ConstructorCluster.constructResult(id)
     }
 
 }
